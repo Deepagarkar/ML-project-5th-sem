@@ -1,73 +1,39 @@
-from flask import Flask, render_template_string, request
+from flask import Flask, render_template, request
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
 
-# Initialize Flask app
 app = Flask(__name__)
 
-# -------------------- TRAIN MODEL --------------------
-print("⚙️ Training model (no model.pkl needed)...")
-
-# Load dataset (safe encoding)
-data = pd.read_csv("diabetes.csv", encoding='latin1')
-
+# Load and train model dynamically
+data = pd.read_csv("diabetes.csv")
 X = data.drop("Outcome", axis=1)
 y = data["Outcome"]
 
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
-model = RandomForestClassifier(random_state=42)
-model.fit(X_scaled, y)
-
-print("✅ Model trained successfully!")
-
-# -------------------- WEB UI --------------------
-HTML_PAGE = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Diabetes Predictor</title>
-    <style>
-        body { font-family: Arial; background: linear-gradient(to right, #d0f0f0, #f4e1ff);
-               display: flex; flex-direction: column; align-items: center; padding: 30px; }
-        h1 { color: #333; }
-        form { background: white; padding: 25px; border-radius: 12px; width: 320px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
-        input { width: 90%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 8px; }
-        button { background: #6200ea; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; }
-        button:hover { background: #3700b3; }
-        h2 { color: #111; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <h1>🩺 Diabetes Disease Prediction</h1>
-    <form method="POST">
-        {% for f in fields %}
-        <label>{{ f }}</label><br>
-        <input name="{{ f }}" type="number" step="any" required><br>
-        {% endfor %}
-        <button type="submit">Predict</button>
-    </form>
-    {% if result %}
-        <h2>Prediction: {{ result }}</h2>
-    {% endif %}
-</body>
-</html>
-"""
+model = LogisticRegression(max_iter=200)
+model.fit(X, y)
 
 @app.route("/", methods=["GET", "POST"])
 def home():
-    fields = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness',
-              'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age']
-    result = None
-
+    prediction = None
     if request.method == "POST":
-        user_input = [float(request.form[f]) for f in fields]
-        scaled_input = scaler.transform([user_input])
-        pred = model.predict(scaled_input)[0]
-        result = "Positive (Diabetic)" if pred == 1 else "Negative (Healthy)"
-    return render_template_string(HTML_PAGE, fields=fields, result=result)
+        try:
+            input_data = [
+                float(request.form["Pregnancies"]),
+                float(request.form["Glucose"]),
+                float(request.form["BloodPressure"]),
+                float(request.form["SkinThickness"]),
+                float(request.form["Insulin"]),
+                float(request.form["BMI"]),
+                float(request.form["DiabetesPedigreeFunction"]),
+                float(request.form["Age"])
+            ]
+            result = model.predict([input_data])[0]
+            prediction = "🩸 You are Diabetic 😔" if result == 1 else "💪 You are Healthy 😃"
+        except:
+            prediction = "⚠️ Invalid input. Please enter valid numbers."
+
+    return render_template("index.html", prediction=prediction)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
