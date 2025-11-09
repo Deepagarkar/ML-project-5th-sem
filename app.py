@@ -1,36 +1,51 @@
-from flask import Flask, render_template, request
-import joblib, os, numpy as np
+from flask import Flask, render_template_string, request
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+import os
 
 app = Flask(__name__)
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "model.pkl")
 
-# If model missing, try to train automatically (needs diabetes.csv present)
-if not os.path.exists(MODEL_PATH):
-    try:
-        # lazy import to avoid import errors if sklearn missing at build time
-        from train_model import train_and_save
-        train_and_save(MODEL_PATH)
-    except Exception as e:
-        # raise error so Render logs show why
-        raise RuntimeError("Model missing and auto-train failed: " + str(e))
+# -------------------- TRAIN MODEL ON THE FLY --------------------
+print("⚙️ Training model (no model.pkl needed)...")
+data = pd.read_csv("diabetes.csv", encoding='latin1')
+X = data.drop("Outcome", axis=1)
+y = data["Outcome"]
 
-model = joblib.load(MODEL_PATH)
-FEATURES = ["Pregnancies","Glucose","BloodPressure","SkinThickness","Insulin","BMI","DiabetesPedigreeFunction","Age"]
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-@app.route("/", methods=["GET"])
-def index():
-    return render_template("index.html", features=FEATURES)
+model = RandomForestClassifier(random_state=42)
+model.fit(X_scaled, y)
+print("✅ Model trained successfully!")
 
-@app.route("/predict", methods=["POST"])
-def predict():
-    try:
-        vals = [float(request.form.get(f)) for f in FEATURES]
-        pred = int(model.predict([vals])[0])
-        prob = float(model.predict_proba([vals])[0][1])
-        result = "High Risk (Positive)" if pred==1 else "Low Risk (Negative)"
-        return render_template("result.html", result=result, prob=round(prob,3))
-    except Exception as e:
-        return render_template("result.html", error=str(e))
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+# -------------------- SIMPLE HTML USER INTERFACE --------------------
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🩺 Diabetes Prediction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #e1bee7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+    }
+    h1 { color: #333; }
+    form {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      width: 320px;
+      text-align: center;
+    }
+    input {
+      width: 90%;
+      padding: 8px;
+      margin: 6px 0;
+      b
