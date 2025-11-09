@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Diabetes Disease Prediction</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #00b4d8, #0077b6);
+      font-family: "Poppins", sans-serif;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 30px 50px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      width: 400px;
+      text-align: center;
+    }
+    input, button {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+    }
+    input {
+      background: rgba(255, 255, 255, 0.9);
+    }
+    button {
+      background-color: #0096c7;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    button:hover {
+      background-color: #023e8a;
+    }
+    h1 {
+      margin-bottom: 10px;
+      font-size: 24px;
+      color: #fff;
+    }
+    .result {
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 Diabetes Disease Predictor</h1>
+    <form method="POST">
+      <input type="number" step="any" name="Pregnancies" placeholder="Pregnancies (e.g. 2)" required>
+      <input type="number" step="any" name="Glucose" placeholder="Glucose Level (mg/dL)" required>
+      <input type="number" step="any" name="BloodPressure" placeholder="Blood Pressure (mm Hg)" required>
+      <input type="number" step="any" name="SkinThickness" placeholder="Skin Thickness (mm)" required>
+      <input type="number" step="any" name="Insulin" placeholder="Insulin Level (mu U/ml)" required>
+      <input type="number" step="any" name="BMI" placeholder="BMI (Body Mass Index)" required>
+      <input type="number" step="any" name="DiabetesPedigreeFunction" placeholder="Diabetes Pedigree Function" required>
+      <input type="number" step="any" name="Age" placeholder="Age (years)" required>
+      <button type="submit">Predict 🔍</button>
+    </form>
+    {% if prediction %}
+      <div class="result">{{ prediction }}</div>
+    {% endif %}
+  </div>
+</body>
+</html>
